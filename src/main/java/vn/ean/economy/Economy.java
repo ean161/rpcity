@@ -5,16 +5,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -22,9 +20,9 @@ import java.util.*;
 import static org.bukkit.Bukkit.getLogger;
 
 public class Economy implements Listener {
-    String BILL_NAME_SUFFIX = " vnd";
-    Component BILL_LORE_COMPONENT = Component.text("Tiền dùng để giao dịch").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY);
-    int[] BILL_LEVELS = {
+    private static final String BILL_NAME_SUFFIX = " vnd";
+    private static final Component BILL_LORE_COMPONENT = Component.text("Tiền dùng để giao dịch").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY);
+    private static final int[] BILL_LEVELS = {
             500000,
             200000,
             100000,
@@ -217,9 +215,13 @@ public class Economy implements Listener {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(amount + BILL_NAME_SUFFIX).decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(BILL_LORE_COMPONENT));
-        if (amount == 10000) {
-            meta.setCustomModelData(10000);
-        }
+
+        CustomModelDataComponent modelData = meta.getCustomModelDataComponent();
+        modelData.setFloats(List.of((float) amount));
+        modelData.setStrings(List.of("vnd_" + amount));
+        meta.setCustomModelDataComponent(modelData);
+        meta.setItemModel(new NamespacedKey("yourpack", "vietnam_" + amount + "_banknote"));
+
         item.setItemMeta(meta);
         return item;
     }
