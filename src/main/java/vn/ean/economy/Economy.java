@@ -41,6 +41,9 @@ public class Economy implements Listener {
                 return giveCommand(args);
             case "take":
                 return takeCommand(args);
+            case "check":
+                player.sendMessage(Component.text(checkCommand(args)));
+                return true;
             default:
                 return false;
         }
@@ -64,6 +67,15 @@ public class Economy implements Listener {
         return take(player, Integer.parseInt(args[3]));
     }
 
+    public int checkCommand(String[] args) {
+        Player player = Bukkit.getPlayer(args[2]);
+        if (player == null) {
+            return 0;
+        }
+
+        return check(player);
+    }
+
     public boolean give(Player player, int amount) {
         ArrayList<ItemStack> bills = getBills(amount);
         Location location = player.getEyeLocation();
@@ -76,6 +88,26 @@ public class Economy implements Listener {
         }
 
         return true;
+    }
+
+    public int check(Player player) {
+        int total = 0;
+        PlayerInventory inv = player.getInventory();
+        ItemStack[] contents = inv.getContents();
+
+        for (ItemStack item : contents) {
+            if (item == null) {
+                continue;
+            }
+
+            for (int value : BILL_LEVELS) {
+                if (item.isSimilar(getBill(value))) {
+                    total += value * item.getAmount();
+                }
+            }
+        }
+
+        return total;
     }
 
     public boolean take(Player player, int amount) {
@@ -220,7 +252,7 @@ public class Economy implements Listener {
         modelData.setFloats(List.of((float) amount));
         modelData.setStrings(List.of("vnd_" + amount));
         meta.setCustomModelDataComponent(modelData);
-        meta.setItemModel(new NamespacedKey("yourpack", "vietnam_" + amount + "_banknote"));
+        meta.setItemModel(new NamespacedKey("bills", "vietnam_" + amount + "_banknote"));
 
         item.setItemMeta(meta);
         return item;
