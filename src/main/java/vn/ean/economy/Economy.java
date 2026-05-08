@@ -20,7 +20,7 @@ import java.util.*;
 import static org.bukkit.Bukkit.getLogger;
 
 public class Economy implements Listener {
-    private static final String BILL_NAME_SUFFIX = " vnd";
+    private static final String BILL_NAME_SUFFIX = "vnd";
     private static final Component BILL_LORE_COMPONENT = Component.text("Tiền dùng để giao dịch").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY);
     private static final int[] BILL_LEVELS = {
             500000,
@@ -245,7 +245,7 @@ public class Economy implements Listener {
     public ItemStack getBill(int amount) {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.text(amount + BILL_NAME_SUFFIX).decoration(TextDecoration.ITALIC, false));
+        meta.displayName(Component.text(format(amount)).decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(BILL_LORE_COMPONENT));
 
         CustomModelDataComponent modelData = meta.getCustomModelDataComponent();
@@ -256,5 +256,9 @@ public class Economy implements Listener {
 
         item.setItemMeta(meta);
         return item;
+    }
+
+    public String format(int amount) {
+        return String.format("%,d %s", amount, BILL_NAME_SUFFIX);
     }
 }
