@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -39,7 +40,7 @@ public class Delivery implements Listener {
     private static final Random random = new Random();
     private HashMap<String, Object> orders = new HashMap<>();
 
-    public boolean hookCommand(Player player, String[] args) {
+    public boolean hookCommand(CommandSender sender, String[] args) {
         String command = args[1].toLowerCase();
         switch (command) {
             case "create":
@@ -62,7 +63,7 @@ public class Delivery implements Listener {
         String[] receivers = {"alex", "steve", "hoaiandev", "tuanang"};
 
         int serial = rand(111111, 666666);
-        int range = rand(10, 100);
+        int range = rand(50, 300);
         Location addressPoint = getRandomAroundPlayer(player, range);
         int currentBalance = economy.check(player);
         if (currentBalance < 50000) {
@@ -80,7 +81,7 @@ public class Delivery implements Listener {
             return false;
         }
 
-        int cost = Math.floorDiv(range, rand(1, 5)) * 1000;
+        int cost = Math.floorDiv(range, rand(2, 10)) * 1000;
         String receiverName = receivers[rand(0, receivers.length - 1)] + rand(111, 999);
 
         NPC npc = CitizensAPI.getNPCRegistry()
@@ -131,6 +132,10 @@ public class Delivery implements Listener {
     public void onDelivery(NPCRightClickEvent event) {
         Player player = event.getClicker();
         NPC npc = event.getNPC();
+        if (npc.data() == null) {
+            return;
+        }
+
         int packId = npc.data().get("delivery_serial");
         int value = npc.data().get("delivery_cost");
         int cost = npc.data().get("delivery_cost");

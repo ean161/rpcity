@@ -37,7 +37,7 @@ public class Main extends JavaPlugin {
                 case "economy":
                     return economy.hookCommand((Player) sender, args);
                 case "delivery":
-                    return delivery.hookCommand((Player) sender, args);
+                    return delivery.hookCommand(sender, args);
                 default:
                     break;
             }
