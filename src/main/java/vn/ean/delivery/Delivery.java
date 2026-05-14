@@ -137,7 +137,7 @@ public class Delivery implements Listener {
         }
 
         int packId = npc.data().get("delivery_serial");
-        int value = npc.data().get("delivery_cost");
+        int value = npc.data().get("delivery_value");
         int cost = npc.data().get("delivery_cost");
         ItemStack inHand = player.getInventory().getItemInMainHand();
         ItemMeta meta = inHand.getItemMeta();
