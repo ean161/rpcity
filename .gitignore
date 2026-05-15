@@ -8,6 +8,7 @@ target/
 .idea
 cache
 cicd.sh
+cicd-test.sh
 *.iws
 *.iml
 *.ipr

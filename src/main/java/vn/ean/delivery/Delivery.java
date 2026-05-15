@@ -1,6 +1,7 @@
 package vn.ean.delivery;
 
 import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.ai.goals.WanderGoal;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.trait.CommandTrait;
@@ -64,7 +65,27 @@ public class Delivery implements Listener {
 
         int serial = rand(111111, 666666);
         int range = rand(50, 300);
-        Location addressPoint = getRandomAroundPlayer(player, range);
+
+        Location playerLoc = player.getLocation();
+        Location addressPoint = null;
+
+        int addressGenRetry;
+        for (addressGenRetry = 0; addressGenRetry <= 10; addressGenRetry++) {
+            addressPoint = getRandomAroundPlayer(player, range);
+            if (!addressPoint.clone().add(0, -1, 0).getBlock().getType().isAir()) {
+                break;
+            }
+        }
+
+        if (addressGenRetry == 10) {
+            player.sendActionBar("Hiện tại chưa có đơn hàng nào sẵn sàng");
+            return false;
+        }
+
+        double dx = addressPoint.getX() - playerLoc.getX();
+        double dz = addressPoint.getZ() - playerLoc.getZ();
+        double distance = Math.sqrt(dx * dx + dz * dz);
+
         int currentBalance = economy.check(player);
         if (currentBalance < 50000) {
             player.sendActionBar("Hãy kiếm thêm tiền để nhận hàng");
@@ -81,18 +102,20 @@ public class Delivery implements Listener {
             return false;
         }
 
-        int cost = Math.floorDiv(range, rand(2, 10)) * 1000;
+        int cost = Math.floorDiv((int) distance, rand(2, 10)) * 1000;
         String receiverName = receivers[rand(0, receivers.length - 1)] + rand(111, 999);
 
         NPC npc = CitizensAPI.getNPCRegistry()
                 .createNPC(EntityType.PLAYER, receiverName);
-        CommandTrait trait = npc.getOrAddTrait(CommandTrait.class);
+
         npc.data().set("delivery_serial", serial);
         npc.data().set("delivery_value", value);
         npc.data().set("delivery_cost", cost);
         npc.spawn(addressPoint);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "npc wander --id " + npc.getId() + " --xrange 5 --yrange 2 --zrange 5");
+        System.out.println("npc wander --id " + npc.getId() + " --xrange 5 --yrange 2 --zrange 5");
 
-        ItemStack pack = getPackage(serial, String.format("%s (X: %.0f, Z: %.0f, %dm)", receiverName, addressPoint.getX(), addressPoint.getZ(), range), player, value, cost);
+        ItemStack pack = getPackage(serial, String.format("%s (X: %.0f, Z: %.0f, %.1fm)", receiverName, addressPoint.getX(), addressPoint.getZ(), distance), player, value, cost);
 
         Location location = player.getEyeLocation();
         Vector direction = location.getDirection().normalize();
