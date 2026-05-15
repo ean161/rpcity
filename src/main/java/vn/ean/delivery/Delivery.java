@@ -61,7 +61,7 @@ public class Delivery implements Listener {
     }
 
     public boolean create(Player player) {
-        String[] receivers = {"alex", "steve", "hoaiandev", "tuanang"};
+        String[] receivers = {"alex", "steve", "eanvn", "hoaiandev", "tuanang", "mojang", "chysun", "kingwixx", "heenei", "louismc", "wangg", "chuotmc", "huynope", "taco"};
 
         int serial = rand(111111, 666666);
         int range = rand(50, 300);
