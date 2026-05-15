@@ -77,6 +77,8 @@ public class Economy implements Listener {
     }
 
     public boolean give(Player player, int amount) {
+        amount = toValidAmount(amount);
+
         ArrayList<ItemStack> bills = getBills(amount);
         Location location = player.getEyeLocation();
         Vector direction = location.getDirection().normalize();
@@ -111,6 +113,8 @@ public class Economy implements Listener {
     }
 
     public boolean take(Player player, int amount) {
+        amount = toValidAmount(amount);
+
         PlayerInventory inv = player.getInventory();
         ItemStack[] contents = inv.getContents();
 
@@ -260,5 +264,10 @@ public class Economy implements Listener {
 
     public String format(int amount) {
         return String.format("%,d %s", amount, BILL_NAME_SUFFIX);
+    }
+
+    public int toValidAmount(int amount) {
+        int mod = amount % 1000;
+        return amount - mod;
     }
 }
