@@ -85,6 +85,10 @@ public class Delivery implements Listener {
         double dx = addressPoint.getX() - playerLoc.getX();
         double dz = addressPoint.getZ() - playerLoc.getZ();
         double distance = Math.sqrt(dx * dx + dz * dz);
+        int time = (int) Math.floor(distance * ((double) rand(1, 20) / 10));
+        if (time < 10) {
+            time = 10 + rand(0, 5);
+        }
 
         int currentBalance = economy.check(player);
         if (currentBalance < 50000) {
@@ -92,17 +96,27 @@ public class Delivery implements Listener {
             return false;
         }
 
-        int value = rand(30, currentBalance / 1000 * 3) * 1000;
+        int value = rand((int) percentOf(1, currentBalance), (int) percentOf(50, currentBalance));
+        if (value < 10000) {
+            value = rand(1, 5) * 10000;
+        }
+        value = value - (value % 1000);
+
         if (currentBalance <= value) {
             player.sendActionBar("Hiện tại chưa có đơn hàng phù hợp với bạn");
             return false;
         }
+
         boolean takeState = economy.take(player, value);
         if (!takeState) {
             return false;
         }
 
-        int cost = Math.floorDiv((int) distance, rand(2, 10)) * 1000;
+        int cost = (int) Math.floor(rand((int) percentOf(5, distance), (int) percentOf(40, distance))) * 1000;
+        if (cost < 3000) {
+            cost = 3000;
+        }
+
         String receiverName = receivers[rand(0, receivers.length - 1)] + rand(111, 999);
 
         NPC npc = CitizensAPI.getNPCRegistry()
@@ -113,9 +127,8 @@ public class Delivery implements Listener {
         npc.data().set("delivery_cost", cost);
         npc.spawn(addressPoint);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "npc wander --id " + npc.getId() + " --xrange 5 --yrange 2 --zrange 5");
-        System.out.println("npc wander --id " + npc.getId() + " --xrange 5 --yrange 2 --zrange 5");
 
-        ItemStack pack = getPackage(serial, String.format("%s (X: %.0f, Z: %.0f, %.1fm)", receiverName, addressPoint.getX(), addressPoint.getZ(), distance), player, value, cost);
+        ItemStack pack = getPackage(serial, String.format("%.0f X, %.0f Y (%.1fm)", addressPoint.getX(), addressPoint.getZ(), distance), receiverName, value, cost, time);
 
         Location location = player.getEyeLocation();
         Vector direction = location.getDirection().normalize();
@@ -123,17 +136,34 @@ public class Delivery implements Listener {
         Item dropped = player.getWorld().dropItem(dropLocation, pack);
         dropped.setVelocity(direction.multiply(0.3));
 
+        Bukkit.getGlobalRegionScheduler().runDelayed(plugin, task -> {
+            if (npc.isSpawned()) {
+                npc.destroy();
+                player.sendActionBar(receiverName + " đã huỷ đơn hàng do quá thời gian giao");
+            }
+        }, 20L * time);
+
         return false;
     }
 
-    public ItemStack getPackage(int serial, String address, Player player, int value, int cost) {
-        ItemStack item = new ItemStack(Material.PAPER);
+    public ItemStack getPackage(int serial, String address, String receiverName, int value, int cost, int time) {
+        List<Material> packageTypes = List.of(
+                Material.BEEF,
+                Material.COOKED_BEEF,
+                Material.APPLE,
+                Material.CAKE,
+                Material.COOKED_SALMON,
+                Material.COOKED_CHICKEN
+        );
+
+        ItemStack item = new ItemStack(packageTypes.get(rand(0, packageTypes.size() - 1)));
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.text("Đơn hàng #" + serial).decoration(TextDecoration.ITALIC, false));
+        meta.displayName(Component.text("Đơn hàng của " + receiverName).decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(
-                Component.text("Người nhận: " + address).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY),
-                Component.text("Giá trị đơn: " + economy.format(value)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY),
-                Component.text("Tiền kiếm được: " + economy.format(cost)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY)
+                Component.text("Vị trí: " + address).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY),
+                Component.text("Thời gian giao: " + time + " giây").decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY),
+                Component.text("Tiền món: " + economy.format(value)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY),
+                Component.text("Tiền ship: " + economy.format(cost)).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.GRAY)
         ));
         meta.getPersistentDataContainer().set(
                 new NamespacedKey(plugin, "delivery_serial"),
@@ -174,15 +204,23 @@ public class Delivery implements Listener {
         if (packId != serial) {
             return;
         }
+
         player.getInventory().setItemInMainHand(null);
         economy.give(player, cost + value);
+        npc.setSneaking(true);
 
-        npc.destroy();
+        Bukkit.getGlobalRegionScheduler().runDelayed(plugin, task -> {
+            npc.destroy();
+        }, 10L);
     }
 
     public int rand(int min, int max) {
         Random random = new Random();
         return random.nextInt(max - min + 1) + min;
+    }
+
+    public static double percentOf(double percent, double number) {
+        return (percent / 100.0) * number;
     }
 
     public Location getRandomAroundPlayer(Player player, double radius) {
