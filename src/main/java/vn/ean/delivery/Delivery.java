@@ -22,6 +22,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import vn.ean.economy.Economy;
+import vn.ean.utils.Utils;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -63,8 +64,8 @@ public class Delivery implements Listener {
     public boolean create(Player player) {
         String[] receivers = {"alex", "steve", "eanvn", "hoaiandev", "tuanang", "mojang", "chysun", "kingwixx", "heenei", "louismc", "wangg", "chuotmc", "huynope", "taco"};
 
-        int serial = rand(111111, 666666);
-        int range = rand(50, 300);
+        int serial = Utils.rand(111111, 666666);
+        int range = Utils.rand(50, 300);
 
         Location playerLoc = player.getLocation();
         Location addressPoint = null;
@@ -85,9 +86,9 @@ public class Delivery implements Listener {
         double dx = addressPoint.getX() - playerLoc.getX();
         double dz = addressPoint.getZ() - playerLoc.getZ();
         double distance = Math.sqrt(dx * dx + dz * dz);
-        int time = (int) Math.floor(distance * ((double) rand(1, 20) / 10));
+        int time = (int) Math.floor(distance * ((double) Utils.rand(1, 20) / 10));
         if (time < 10) {
-            time = 10 + rand(0, 5);
+            time = 10 + Utils.rand(0, 5);
         }
 
         int currentBalance = economy.check(player);
@@ -96,9 +97,9 @@ public class Delivery implements Listener {
             return false;
         }
 
-        int value = rand((int) percentOf(1, currentBalance), (int) percentOf(50, currentBalance));
+        int value = Utils.rand((int) Utils.percentOf(1, currentBalance), (int) Utils.percentOf(50, currentBalance));
         if (value < 10000) {
-            value = rand(1, 5) * 10000;
+            value = Utils.rand(1, 5) * 10000;
         }
         value = value - (value % 1000);
 
@@ -112,12 +113,12 @@ public class Delivery implements Listener {
             return false;
         }
 
-        int cost = (int) Math.floor(rand((int) percentOf(5, distance), (int) percentOf(40, distance))) * 1000;
+        int cost = (int) Math.floor(Utils.rand((int) Utils.percentOf(5, distance), (int) Utils.percentOf(40, distance))) * 1000;
         if (cost < 3000) {
             cost = 3000;
         }
 
-        String receiverName = receivers[rand(0, receivers.length - 1)] + rand(111, 999);
+        String receiverName = receivers[Utils.rand(0, receivers.length - 1)] + Utils.rand(111, 999);
 
         NPC npc = CitizensAPI.getNPCRegistry()
                 .createNPC(EntityType.PLAYER, receiverName);
@@ -156,7 +157,7 @@ public class Delivery implements Listener {
                 Material.COOKED_CHICKEN
         );
 
-        ItemStack item = new ItemStack(packageTypes.get(rand(0, packageTypes.size() - 1)));
+        ItemStack item = new ItemStack(packageTypes.get(Utils.rand(0, packageTypes.size() - 1)));
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text("Đơn hàng của " + receiverName).decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(
@@ -212,15 +213,6 @@ public class Delivery implements Listener {
         Bukkit.getGlobalRegionScheduler().runDelayed(plugin, task -> {
             npc.destroy();
         }, 10L);
-    }
-
-    public int rand(int min, int max) {
-        Random random = new Random();
-        return random.nextInt(max - min + 1) + min;
-    }
-
-    public static double percentOf(double percent, double number) {
-        return (percent / 100.0) * number;
     }
 
     public Location getRandomAroundPlayer(Player player, double radius) {
