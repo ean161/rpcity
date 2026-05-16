@@ -72,7 +72,7 @@ public class Delivery implements Listener {
         int addressGenRetry;
         for (addressGenRetry = 0; addressGenRetry <= 10; addressGenRetry++) {
             addressPoint = getRandomAroundPlayer(player, range);
-            if (!addressPoint.clone().add(0, -1, 0).getBlock().getType().isAir()) {
+            if (!addressPoint.clone().add(0, -1, 0).getBlock().getType().isAir() && addressPoint.isChunkLoaded()) {
                 break;
             }
         }
