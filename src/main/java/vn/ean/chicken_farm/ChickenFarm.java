@@ -86,7 +86,7 @@ public class ChickenFarm implements Listener {
 
             AttributeInstance scale = baby.getAttribute(Attribute.SCALE);
             if (scale != null) {
-                scale.setBaseValue(1 * weight);
+                scale.setBaseValue(1 * (1 + (weight / 2)));
             }
         }
     }
@@ -119,15 +119,11 @@ public class ChickenFarm implements Listener {
         int min = Math.min(motherRare, fatherRare);
         int max = Math.max(motherRare, fatherRare);
 
-        if (Utils.isChance(0.1)) {
+        if (Utils.isChance(1)) {
             return max + 1;
-        } else if (Utils.isChance(10)) {
+        } else if (Utils.isChance(30)) {
             return max;
-        } else if (Utils.isChance(60)) {
-            if (min == 0) {
-                return min;
-            }
-            return min - 1;
+
         }
 
         return min;
